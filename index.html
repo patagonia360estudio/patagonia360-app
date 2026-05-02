@@ -1,82 +1,504 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#021a10">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Patagonia 360 — Guía turística interactiva con GPS y AR">
+
   <title>Patagonia 360</title>
 
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="./style.css" />
+  <!-- PWA manifest inline — copiar a manifest.json para producción -->
+  <link rel="manifest" href="manifest.json">
 
   <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
+  <!-- EXIF reader (GPS desde fotos) -->
+  <script src="https://unpkg.com/exifr@7.1.3/dist/lite.umd.js" defer></script>
+
+  <!-- QR generator -->
+  <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js" defer></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-  <div id="app">
+  <!-- ══════════════════════════════════════════
+       PANTALLA: HOME
+       ══════════════════════════════════════════ -->
+  <div id="screen-home" class="screen active">
+    <div class="home-bg-glow"></div>
 
-    <!-- HEADER / BRAND -->
-    <header class="hero">
-      <img src="./assets/logo.png" class="logo"
-           onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex';">
-
-      <div id="logo-fallback" class="logo-fallback">
-        <div class="logo-icon">△</div>
-        <div class="logo-text">Patagonia <span>360</span></div>
+    <header class="home-header">
+      <!-- Logo: intenta /assets/logo.png, fallback SVG inline -->
+      <img
+        id="main-logo"
+        src="assets/logo.png"
+        alt="Patagonia 360"
+        class="home-logo"
+        onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/gh/patagonia360estudio/demo-3D@main/imagen/LogoV2.png'; this.onerror=function(){ this.style.display='none'; document.getElementById('logo-fallback').style.display='flex'; };"
+      >
+      <div id="logo-fallback" class="logo-fallback" aria-hidden="true">
+        <!-- SVG que replica estructura visual del logo real -->
+        <svg viewBox="0 0 96 96" width="80" height="80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="48" cy="48" r="45" stroke="#e8b84b" stroke-width="2.5" fill="#021a10"/>
+          <polygon points="48,16 26,60 70,60" fill="none" stroke="#e8b84b" stroke-width="2.2" stroke-linejoin="round"/>
+          <polygon points="28,60 14,80 44,80" fill="none" stroke="#22d68a" stroke-width="1.8" stroke-linejoin="round"/>
+          <polygon points="68,60 52,80 82,80" fill="none" stroke="#22d68a" stroke-width="1.8" stroke-linejoin="round"/>
+          <line x1="37" y1="42" x2="59" y2="42" stroke="#e8b84b" stroke-width="1" opacity=".55"/>
+          <line x1="34" y1="50" x2="62" y2="50" stroke="#e8b84b" stroke-width="1" opacity=".55"/>
+          <line x1="48" y1="26" x2="48" y2="60" stroke="#e8b84b" stroke-width="1" opacity=".55"/>
+          <line x1="42" y1="36" x2="34" y2="56" stroke="#e8b84b" stroke-width="1" opacity=".55"/>
+          <line x1="54" y1="36" x2="62" y2="56" stroke="#e8b84b" stroke-width="1" opacity=".55"/>
+          <path d="M18 82 A33 33 0 0 0 78 82" stroke="#e8b84b" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+          <polygon points="78,82 71,75 83,74" fill="#e8b84b"/>
+        </svg>
+        <div class="logo-fallback-text">
+          <span class="logo-name">Patagonia <em>360</em></span>
+          <span class="logo-sub">Estudio de Imágenes</span>
+        </div>
       </div>
-
-      <p class="subtitle">AR Experience Platform · Bariloche</p>
+      <p class="home-tagline">Guía turística AR · Bariloche</p>
     </header>
 
-    <!-- CARDS -->
-    <div class="cards">
-
-      <div class="card" onclick="startGPS()">
-        <div class="icon green">🧭</div>
-        <div>
-          <div class="title">Modo Viajero</div>
-          <div class="desc">Explorá con GPS y AR</div>
+    <nav class="home-nav" role="navigation" aria-label="Menú principal">
+      <!-- Modo Viajero -->
+      <button class="mode-card" onclick="goHotel()" aria-label="Abrir Modo Viajero">
+        <div class="mc-icon green">🧭</div>
+        <div class="mc-text">
+          <span class="mc-title">Modo Viajero</span>
+          <span class="mc-sub">GPS + AR en tiempo real</span>
         </div>
-      </div>
+        <span class="mc-arrow" aria-hidden="true">›</span>
+      </button>
 
-      <div class="card">
-        <div class="icon gold">✏️</div>
-        <div>
-          <div class="title">Crear tu recorrido</div>
-          <div class="desc">Fotos + GPS</div>
+      <!-- Crear Recorrido -->
+      <button class="mode-card gold" onclick="goCreator()" aria-label="Crear nuevo recorrido">
+        <div class="mc-icon gold">✏️</div>
+        <div class="mc-text">
+          <span class="mc-title">Crear Recorrido</span>
+          <span class="mc-sub">Fotos · EXIF · GPS automático</span>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="icon blue">📚</div>
-        <div>
-          <div class="title">Mis recorridos</div>
-          <div class="desc">Guardados</div>
+        <div class="mc-right">
+          <span class="badge badge-gold">NUEVO</span>
+          <span class="mc-arrow gold-text" aria-hidden="true">›</span>
         </div>
-      </div>
+      </button>
 
-    </div>
+      <!-- Mis Recorridos -->
+      <button class="mode-card blue" onclick="goGallery()" aria-label="Ver mis recorridos">
+        <div class="mc-icon blue">📚</div>
+        <div class="mc-text">
+          <span class="mc-title">Mis Recorridos</span>
+          <span class="mc-sub" id="gallery-home-sub">Sin recorridos guardados</span>
+        </div>
+        <span class="mc-arrow blue-text" aria-hidden="true">›</span>
+      </button>
+    </nav>
 
-    <!-- MAPA -->
-    <div id="map"></div>
-
-    <!-- BOTON -->
-    <button class="main-btn" onclick="startGPS()">
-      + Iniciar navegación
-    </button>
-
+    <footer class="home-footer">
+      Demo Comercial · Patagonia 360 · v5
+    </footer>
   </div>
 
-  <!-- FLECHA AR -->
-  <div id="arrow">⬆️</div>
 
-  <!-- JS -->
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="./app.js"></script>
+  <!-- ══════════════════════════════════════════
+       PANTALLA: HOTEL — listado de servicios
+       ══════════════════════════════════════════ -->
+  <div id="screen-hotel" class="screen">
+    <div class="topbar">
+      <button class="btn-back" onclick="show('screen-home')" aria-label="Volver">← Volver</button>
+      <div class="topbar-brand">
+        <img
+          src="assets/logo.png"
+          alt=""
+          class="topbar-logo"
+          onerror="this.style.display='none'"
+          aria-hidden="true"
+        >
+        <span class="topbar-title">Hotel Demo</span>
+      </div>
+      <span class="badge badge-live" aria-label="En vivo">● En vivo</span>
+    </div>
 
+    <div class="screen-body">
+      <button class="btn btn-ar" onclick="openARScan()" aria-label="Abrir vista AR">
+        <span aria-hidden="true">◉</span>
+        Vista AR
+        <span class="badge badge-green-sm" aria-hidden="true">LIVE</span>
+      </button>
+
+      <!-- Mini mapa decorativo -->
+      <div class="mini-map-decor" aria-hidden="true">
+        <svg width="100%" height="100%">
+          <line x1="0" y1="30%" x2="100%" y2="30%" stroke="var(--green)" stroke-width=".5" stroke-dasharray="5,12" opacity=".3"/>
+          <line x1="0" y1="65%" x2="100%" y2="65%" stroke="var(--green)" stroke-width=".5" stroke-dasharray="5,12" opacity=".3"/>
+          <line x1="20%" y1="0" x2="20%" y2="100%" stroke="var(--green)" stroke-width=".5" stroke-dasharray="5,12" opacity=".3"/>
+          <line x1="50%" y1="0" x2="50%" y2="100%" stroke="var(--green)" stroke-width=".5" stroke-dasharray="5,12" opacity=".3"/>
+          <line x1="80%" y1="0" x2="80%" y2="100%" stroke="var(--green)" stroke-width=".5" stroke-dasharray="5,12" opacity=".3"/>
+        </svg>
+        <div class="mini-map-pin" aria-hidden="true">⊕ Tu ubicación</div>
+      </div>
+
+      <p class="section-label">Servicios disponibles</p>
+
+      <button class="poi-btn" onclick="selectSvc('spa')" style="--poi-color:#7ecfc0" aria-label="Navegar al Spa">
+        <div class="poi-icon" aria-hidden="true">✦</div>
+        <div class="poi-info">
+          <span class="poi-name">Spa &amp; Wellness</span>
+          <span class="poi-meta">85m · Toca para navegar</span>
+        </div>
+        <span class="poi-arrow" aria-hidden="true">›</span>
+      </button>
+
+      <button class="poi-btn" onclick="selectSvc('restaurant')" style="--poi-color:#e8c97a" aria-label="Navegar al Restaurante">
+        <div class="poi-icon" aria-hidden="true">◈</div>
+        <div class="poi-info">
+          <span class="poi-name">Restaurante</span>
+          <span class="poi-meta">120m · Toca para navegar</span>
+        </div>
+        <span class="poi-arrow" aria-hidden="true">›</span>
+      </button>
+
+      <button class="poi-btn" onclick="selectSvc('pool')" style="--poi-color:#5ca8e8" aria-label="Navegar a la Piscina">
+        <div class="poi-icon" aria-hidden="true">◎</div>
+        <div class="poi-info">
+          <span class="poi-name">Piscina</span>
+          <span class="poi-meta">200m · Toca para navegar</span>
+        </div>
+        <span class="poi-arrow" aria-hidden="true">›</span>
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       PANTALLA: NAVIGATION — GPS + Mapa
+       ══════════════════════════════════════════ -->
+  <div id="screen-nav" class="screen">
+    <div class="topbar">
+      <button class="btn-back" onclick="stopNav(); show('screen-hotel')" aria-label="Volver">← Volver</button>
+      <div id="nav-title" class="topbar-title-center">—</div>
+      <span id="gps-status" class="badge gps-wait" aria-live="polite">GPS…</span>
+    </div>
+
+    <div class="screen-body screen-body--nav">
+      <!-- Chip navegando -->
+      <div class="nav-chip">
+        <span class="dot-pulse" aria-hidden="true"></span>
+        Navegando
+      </div>
+
+      <!-- MAPA LEAFLET -->
+      <div id="map-wrap" role="application" aria-label="Mapa de navegación">
+        <div id="leaflet-map"></div>
+      </div>
+
+      <!-- Alerta proximidad -->
+      <div id="proximity-alert" class="proximity-alert" role="alert" aria-live="assertive">
+        <span aria-hidden="true">⚠️</span>
+        <div>
+          <strong>¡Estás cerca!</strong>
+          <small>A menos de 50m del destino</small>
+        </div>
+        <button class="btn btn-ar btn-sm" onclick="openARView()" aria-label="Abrir AR">AR →</button>
+      </div>
+
+      <!-- HUD distancias -->
+      <div class="dist-hud" role="status" aria-label="Información de distancia">
+        <div class="dist-card">
+          <span class="dist-label">Distancia</span>
+          <span class="dist-value" id="dist-val">—</span>
+        </div>
+        <div class="dist-card">
+          <span class="dist-label">Rumbo</span>
+          <span class="dist-value" id="bearing-val" style="font-size:13px">—</span>
+        </div>
+        <div class="dist-card">
+          <span class="dist-label">Precisión</span>
+          <span class="dist-value" id="acc-val" style="font-size:13px">—</span>
+        </div>
+      </div>
+
+      <!-- Flecha de orientación -->
+      <div class="arrow-wrap" aria-label="Dirección hacia el destino">
+        <div class="arrow-ring">
+          <svg id="nav-arrow" width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <path d="M24 42 L24 8" stroke="var(--green)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M12 20 L24 8 L36 20" stroke="var(--green)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="24" cy="42" r="3" fill="var(--green)" opacity=".45"/>
+          </svg>
+        </div>
+        <span class="arrow-label" id="arrow-label">Calculando…</span>
+      </div>
+
+      <!-- Botón reservar antes de ir -->
+      <button class="btn btn-reserve" id="reserve-before-btn" onclick="reserveService()">
+        🗓️ Reservar antes de ir
+      </button>
+
+      <!-- Botón inteligente -->
+      <button class="btn btn-smart far-mode" id="smart-action-btn" onclick="handleSmartAction()">
+        Reservar
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       PANTALLA: ARRIVAL
+       ══════════════════════════════════════════ -->
+  <div id="screen-arrival" class="screen">
+    <div class="screen-body screen-body--center">
+      <div class="arrival-hero">
+        <div class="arrival-icon-wrap">
+          <img id="arrival-img" src="" alt="" class="arrival-img-real">
+          <span id="arrival-emoji" class="arrival-emoji" aria-hidden="true">✦</span>
+        </div>
+        <span class="arrival-check">✓ Llegaste</span>
+        <h1 id="arr-title" class="arrival-title">—</h1>
+        <span class="badge badge-green">Hotel Demo</span>
+      </div>
+      <div class="card arrival-desc-card">
+        <p id="arr-desc" class="arrival-desc">—</p>
+      </div>
+      <button class="btn btn-green" id="arr-action" onclick="handleArrival()">Reservar</button>
+      <button class="btn btn-outline mt-8" onclick="show('screen-home')">← Volver al inicio</button>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       PANTALLA: AR VIEW — fullscreen overlay
+       ══════════════════════════════════════════ -->
+  <div id="screen-ar" class="screen-ar" role="dialog" aria-modal="true" aria-label="Vista de Realidad Aumentada">
+    <video id="ar-video" autoplay playsinline muted aria-hidden="true"></video>
+
+    <div class="ar-hud" aria-hidden="true">
+      <!-- Barra superior -->
+      <div class="ar-topbar">
+        <button class="ar-btn-close" onclick="closeAR()" aria-label="Cerrar AR">✕ Cerrar AR</button>
+        <!-- Brújula -->
+        <div class="ar-compass" role="status" aria-label="Brújula">
+          <div class="compass-track">
+            <div class="compass-dirs" id="compass-dirs"></div>
+            <div class="compass-needle"></div>
+          </div>
+        </div>
+        <span class="ar-badge-live">◉ AR LIVE</span>
+      </div>
+
+      <!-- Esquinas de encuadre -->
+      <div class="ar-corner tl"></div>
+      <div class="ar-corner tr"></div>
+      <div class="ar-corner bl"></div>
+      <div class="ar-corner br"></div>
+
+      <!-- Línea de scan animada -->
+      <div class="ar-scanline"></div>
+
+      <!-- FLECHA AR DIRECCIONAL -->
+      <div id="ar-direction-arrow" aria-label="Dirección hacia el POI">↑</div>
+
+      <!-- Card del POI flotante -->
+      <div class="ar-poi-wrap">
+        <div class="ar-poi-card">
+          <img id="ar-poi-img" src="" alt="" class="ar-poi-img hidden">
+          <div class="ar-poi-body">
+            <div id="ar-poi-icon" class="ar-poi-icon">📍</div>
+            <div id="ar-poi-name" class="ar-poi-name">—</div>
+            <div id="ar-poi-dist" class="ar-poi-dist">— m</div>
+            <div id="ar-poi-desc" class="ar-poi-desc"></div>
+          </div>
+        </div>
+        <div class="ar-poi-line"></div>
+        <div class="ar-poi-dot"></div>
+      </div>
+
+      <!-- HUD inferior -->
+      <div class="ar-bottom-hud">
+        <p class="ar-hud-label">Distancia al destino</p>
+        <div class="ar-dist-row">
+          <span id="ar-dist-big" class="ar-dist-big">—</span>
+          <span class="ar-dist-unit">m</span>
+        </div>
+        <div class="ar-chips">
+          <div class="ar-chip"><span class="ar-chip-lbl">Rumbo</span><span id="ar-bearing" class="ar-chip-val">—</span></div>
+          <div class="ar-chip"><span class="ar-chip-lbl">GPS</span><span id="ar-gps" class="ar-chip-val green">●●●●</span></div>
+          <div class="ar-chip"><span class="ar-chip-lbl">Señal</span><span id="ar-signal" class="ar-chip-val green">Buena</span></div>
+        </div>
+        <button class="btn btn-green" onclick="closeAR(); show('screen-arrival')">✓ Llegué aquí</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       PANTALLA: CREATOR
+       ══════════════════════════════════════════ -->
+  <div id="screen-creator" class="screen">
+    <div class="topbar">
+      <button class="btn-back" onclick="show('screen-home')" aria-label="Volver">← Volver</button>
+      <span class="topbar-title-center">Crear Recorrido</span>
+      <span class="badge badge-gold">Creador</span>
+    </div>
+
+    <div class="screen-body">
+      <!-- Nombre del recorrido -->
+      <div class="tour-name-bar">
+        <span class="tour-name-icon" aria-hidden="true">◬</span>
+        <input
+          class="tour-name-input"
+          id="tour-name-input"
+          type="text"
+          placeholder="Nombre del recorrido…"
+          maxlength="60"
+          aria-label="Nombre del recorrido"
+        >
+      </div>
+
+      <!-- Mapa del creator -->
+      <div class="creator-map-wrap" role="application" aria-label="Mapa del recorrido">
+        <div id="creator-map"></div>
+      </div>
+      <p class="creator-map-hint">Tocá el mapa para posicionar un punto</p>
+
+      <!-- Lista de POIs -->
+      <div class="section-header">
+        <p class="section-label">Puntos del recorrido</p>
+        <span id="poi-count" class="poi-count-badge">0</span>
+      </div>
+      <div id="creator-poi-list">
+        <p id="creator-empty" class="empty-hint">Todavía sin puntos. Agregá el primero.</p>
+      </div>
+
+      <!-- Botón agregar POI -->
+      <button class="btn btn-add-poi" onclick="togglePoiForm()" id="btn-add-poi" aria-expanded="false">
+        <span aria-hidden="true">＋</span> Agregar Punto de Interés
+      </button>
+
+      <!-- Formulario colapsable -->
+      <div id="add-poi-form" class="add-poi-form" role="region" aria-label="Formulario de nuevo punto">
+        <p class="form-section-title">NUEVO PUNTO</p>
+
+        <!-- Zona drop de foto -->
+        <label class="lbl" for="photo-input">Foto del lugar</label>
+        <div class="drop-zone" id="drop-zone">
+          <input type="file" id="photo-input" accept="image/*" onchange="onPhotoSelected(this)" aria-label="Subir foto del lugar">
+          <div class="drop-icon" aria-hidden="true">📷</div>
+          <p class="drop-text">Tocar para subir foto</p>
+          <p class="drop-sub">JPEG · PNG · HEIC — GPS se lee del EXIF automáticamente</p>
+        </div>
+
+        <!-- Preview foto -->
+        <div id="photo-preview" class="photo-preview">
+          <img id="preview-img" src="" alt="Preview de la foto seleccionada">
+          <div class="photo-preview-bar">
+            <span class="exif-badge exif-none" id="exif-badge">Sin GPS EXIF</span>
+          </div>
+        </div>
+
+        <!-- Campos del POI -->
+        <div class="form-fields">
+          <div class="form-group">
+            <label class="lbl" for="poi-name-input">Nombre *</label>
+            <input class="input" id="poi-name-input" type="text" placeholder="Ej: Mirador del Cerro" aria-required="true">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="lbl" for="poi-lat-input">Latitud</label>
+              <input class="input" id="poi-lat-input" type="number" step="any" placeholder="-41.1335">
+            </div>
+            <div class="form-group">
+              <label class="lbl" for="poi-lng-input">Longitud</label>
+              <input class="input" id="poi-lng-input" type="number" step="any" placeholder="-71.3103">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="lbl" for="poi-desc-input">Descripción</label>
+            <textarea class="input" id="poi-desc-input" placeholder="Descripción breve…" rows="2"></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-gold flex-1" onclick="confirmAddPoi()">Confirmar Punto</button>
+          <button class="btn btn-outline btn-icon" onclick="cancelPoiForm()" aria-label="Cancelar">✕</button>
+        </div>
+      </div>
+
+      <!-- Guardar y exportar -->
+      <div class="creator-actions">
+        <button class="btn btn-green" id="save-tour-btn" onclick="saveTour()" disabled>
+          💾 Guardar Recorrido
+        </button>
+        <button class="btn btn-outline" id="export-qr-btn" onclick="exportQR()" disabled>
+          ⊞ Exportar QR
+        </button>
+        <p id="save-hint" class="save-hint">Agregá al menos 1 punto para guardar</p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       PANTALLA: GALERÍA DE RECORRIDOS
+       ══════════════════════════════════════════ -->
+  <div id="screen-gallery" class="screen">
+    <div class="topbar">
+      <button class="btn-back" onclick="show('screen-home')" aria-label="Volver">← Volver</button>
+      <span class="topbar-title-center">Mis Recorridos</span>
+      <span id="gallery-count-badge" class="badge badge-blue">0</span>
+    </div>
+
+    <div class="screen-body">
+      <div id="gallery-list" role="list"></div>
+      <button class="btn btn-outline mt-8" onclick="goCreator()">＋ Crear nuevo recorrido</button>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       MODAL: QR CODE
+       ══════════════════════════════════════════ -->
+  <div id="qr-modal" class="modal" role="dialog" aria-modal="true" aria-label="Código QR del recorrido">
+    <div class="modal-backdrop" onclick="closeQRModal()"></div>
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2 class="modal-title">Compartir Recorrido</h2>
+        <button class="modal-close" onclick="closeQRModal()" aria-label="Cerrar">✕</button>
+      </div>
+      <div id="qr-canvas-wrap" class="qr-canvas-wrap">
+        <canvas id="qr-canvas"></canvas>
+      </div>
+      <p id="qr-tour-name" class="qr-tour-name">—</p>
+      <p class="qr-hint">Escaneá para ver en AR</p>
+      <div class="modal-actions">
+        <button class="btn btn-outline flex-1" onclick="copyTourURL()" id="copy-url-btn">⊂ Copiar URL</button>
+        <button class="btn btn-green flex-1" onclick="closeQRModal()">Listo</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════
+       TOAST — notificación global
+       ══════════════════════════════════════════ -->
+  <div id="toast" class="toast" role="status" aria-live="polite">
+    <span id="toast-icon" class="toast-icon">✓</span>
+    <span id="toast-text" class="toast-text">Mensaje</span>
+  </div>
+
+
+  <script src="app.js" defer></script>
 </body>
 </html>
