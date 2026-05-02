@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Patagonia 360</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./style.css" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+</head>
+
+<body>
+
+  <div id="app">
+
+    <!-- HEADER / BRAND -->
+    <header class="hero">
+      <img src="./assets/logo.png" class="logo"
+           onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex';">
+
+      <div id="logo-fallback" class="logo-fallback">
+        <div class="logo-icon">△</div>
+        <div class="logo-text">Patagonia <span>360</span></div>
+      </div>
+
+      <p class="subtitle">AR Experience Platform · Bariloche</p>
+    </header>
+
+    <!-- CARDS -->
+    <div class="cards">
+
+      <div class="card" onclick="startGPS()">
+        <div class="icon green">🧭</div>
+        <div>
+          <div class="title">Modo Viajero</div>
+          <div class="desc">Explorá con GPS y AR</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="icon gold">✏️</div>
+        <div>
+          <div class="title">Crear tu recorrido</div>
+          <div class="desc">Fotos + GPS</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="icon blue">📚</div>
+        <div>
+          <div class="title">Mis recorridos</div>
+          <div class="desc">Guardados</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MAPA -->
+    <div id="map"></div>
+
+    <!-- BOTON -->
+    <button class="main-btn" onclick="startGPS()">
+      + Iniciar navegación
+    </button>
+
+  </div>
+
+  <!-- FLECHA AR -->
+  <div id="arrow">⬆️</div>
+
+  <!-- JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="./app.js"></script>
+
+</body>
+</html>
