@@ -1,0 +1,125 @@
+:root {
+  --bg: #021a10;
+  --surface: #0a2415;
+  --border: #143d20;
+  --green: #22d68a;
+  --gold: #e8b84b;
+  --text: #d8eed8;
+  --text2: #8aaa98;
+  --ff-display: 'Syne', sans-serif;
+  --ff-body: 'DM Sans', sans-serif;
+}
+
+html, body {
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  background: radial-gradient(ellipse at 30% 20%, #0d3520 0%, #091608 60%, #040e06 100%);
+  font-family: var(--ff-body);
+  overflow:auto;
+}
+
+#app {
+  padding:20px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* HERO */
+.hero {
+  text-align:center;
+  margin-bottom:20px;
+}
+
+.logo {
+  width:200px;
+  max-width:80%;
+}
+
+.logo-fallback {
+  display:none;
+  justify-content:center;
+  gap:10px;
+  align-items:center;
+}
+
+.logo-icon {
+  font-size:28px;
+}
+
+.logo-text {
+  font-size:22px;
+  font-weight:800;
+}
+
+.logo-text span {
+  color: var(--green);
+}
+
+.subtitle {
+  font-size:12px;
+  color:var(--text2);
+}
+
+/* CARDS */
+.card {
+  background: var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:12px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+
+.icon {
+  width:44px;
+  height:44px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.green { background: rgba(34,214,138,.15); }
+.gold { background: rgba(232,184,75,.15); }
+.blue { background: rgba(92,168,232,.15); }
+
+.title {
+  font-weight:700;
+}
+
+.desc {
+  font-size:12px;
+  color:var(--text2);
+}
+
+/* MAP */
+#map {
+  height:200px;
+  border-radius:14px;
+  margin-top:10px;
+}
+
+/* BUTTON */
+.main-btn {
+  margin-top:20px;
+  width:100%;
+  padding:16px;
+  border:none;
+  border-radius:14px;
+  background:var(--green);
+  font-weight:700;
+}
+
+/* AR */
+#arrow {
+  position:fixed;
+  top:55%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  font-size:60px;
+  color:var(--green);
+  pointer-events:none;
+}
