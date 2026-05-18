@@ -543,7 +543,87 @@ async function openARView() {
   document.body.appendChild(scr);
   scr.classList.add('open');
 
-  initARCompass();
+function initARCompass() {
+
+  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SO', 'O', 'NO'];
+  const c = document.getElementById('compass-dirs');
+
+  if (!c) return;
+
+  c.innerHTML = [...dirs, ...dirs, ...dirs]
+    .map(d => `<div class="compass-dir ${d === 'N' ? 'n' : ''}">${d}</div>`)
+    .join('');
+
+  function updateCompass(alpha) {
+
+    APP.deviceHeading = alpha;
+
+    const offset = -(alpha / 360) * (dirs.length * 48);
+
+    c.style.transform =
+      `translateX(calc(50% + ${offset}px))`;
+
+    updateDistances();
+  }
+
+  // iPhone / iOS
+  if (
+    typeof DeviceOrientationEvent !== 'undefined' &&
+    typeof DeviceOrientationEvent.requestPermission === 'function'
+  ) {
+
+    DeviceOrientationEvent.requestPermission()
+      .then(permissionState => {
+
+        if (permissionState === 'granted') {
+
+          window.addEventListener(
+            'deviceorientation',
+            e => {
+
+              if (e.webkitCompassHeading != null) {
+
+                updateCompass(e.webkitCompassHeading);
+
+              } else if (e.alpha != null) {
+
+                updateCompass(360 - e.alpha);
+              }
+            },
+            true
+          );
+        }
+      })
+      .catch(err => {
+        console.warn('Permiso brújula rechazado', err);
+      });
+
+  } else {
+
+    // Android
+    window.addEventListener(
+      'deviceorientationabsolute',
+      e => {
+
+        if (e.alpha != null) {
+          updateCompass(360 - e.alpha);
+        }
+      },
+      true
+    );
+
+    window.addEventListener(
+      'deviceorientation',
+      e => {
+
+        if (e.alpha != null) {
+          updateCompass(360 - e.alpha);
+        }
+      },
+      true
+    );
+  }
+}
 
   // Poblar overlay con datos del POI activo
   if (APP.svc) {
@@ -641,7 +721,7 @@ function initARCompass() {
         .then(p => { if (p === 'granted') window.addEventListener('deviceorientation', fn, true); })
         .catch(() => {});
     } else {
-      window.addEventListener('deviceorientation', fn, true);
+      
     }
   }
 }
@@ -651,22 +731,36 @@ function initARCompass() {
    Rota #ar-direction-arrow según bearing − deviceHeading
    ══════════════════════════════════════════════════════════ */
 function updateARArrow(bearDeg) {
+
   if (bearDeg === undefined) {
+
     if (!APP.svc || APP.userLat === null) return;
-    bearDeg = bearing(APP.userLat, APP.userLng, APP.svc.lat, APP.svc.lng);
+
+    bearDeg = bearing(
+      APP.userLat,
+      APP.userLng,
+      APP.svc.lat,
+      APP.svc.lng
+    );
   }
 
-  // Compensar heading del dispositivo para rotación relativa
   let rotation = bearDeg;
+
   if (APP.deviceHeading !== null) {
-    rotation = (bearDeg - APP.deviceHeading + 360) % 360;
+
+    rotation =
+      (bearDeg - APP.deviceHeading + 360) % 360;
   }
 
   const arrow = document.getElementById('ar-direction-arrow');
-  if (arrow) {
-    // IMPORTANTE: preservar translate(-50%,-50%) del CSS
-    arrow.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
-  }
+
+  if (!arrow) return;
+
+  arrow.style.transition =
+    'transform 0.18s linear';
+
+  arrow.style.transform =
+    `translate(-50%, -50%) rotate(${rotation}deg)`;
 }
 
 /* ══════════════════════════════════════════════════════════
