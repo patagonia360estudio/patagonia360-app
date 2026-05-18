@@ -896,28 +896,46 @@ textarea.input { resize: vertical; min-height: 60px; }
 
 /* Card del POI en AR */
 .ar-poi-wrap {
-  position: absolute;
-  left: 50%;
-  top: 30%;
-  transform: translateX(-50%);
+position: absolute;
+
+  top: 120px;
+  right: 14px;
+
+  left: auto;
+  transform: none;
+
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
+
+  z-index: 30;
   pointer-events: none;
 }
 .ar-poi-card {
-  background: rgba(2,26,16,.88);
-  border: 1px solid rgba(34,214,138,.38);
-  border-radius: 14px;
+  width: 145px;
+
+  background: rgba(2,26,16,.86);
+
+  border: 1px solid rgba(34,214,138,.34);
+
+  border-radius: 16px;
+
   overflow: hidden;
-  min-width: 175px;
-  max-width: clamp(175px, 55vw, 220px);
-  text-align: center;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  box-shadow:
+    0 0 20px rgba(34,214,138,.14);
+
   animation: ar-float 3s ease-in-out infinite;
 }
-.ar-poi-img  { width: 100%; height: 78px; object-fit: cover; display: block; }
+.ar-poi-img  {   width: 100%;
+  height: 68px;
+
+  object-fit: cover;
+
+  display: block; }
 .ar-poi-img.hidden { display: none; }
 .ar-poi-body { padding: 10px 14px 12px; }
 .ar-poi-icon { font-size: 20px; }
@@ -2173,39 +2191,53 @@ textarea.input { resize: vertical; min-height: 60px; }
    Siempre visible encima del video.
    ──────────────────────────────────────────────────────── */
 #ar-direction-arrow {
-  position: absolute;
-  top: 60%;
+ position: absolute;
+
+  top: 56%;
   left: 50%;
-  /* transform base gestionada por JS: translate(-50%,-50%) rotate(Ndeg) */
-  transform: translate(-50%, -50%) rotate(0deg);
 
-  /* Contenedor visual */
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: rgba(34,214,138,.1);
-  border: 1.5px solid rgba(34,214,138,.3);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+  transform:
+    translate(-50%, -50%)
+    rotate(0deg);
 
-  /* Texto flecha */
-  font-size: 44px;
-  line-height: 1;
-  color: var(--green);
-  text-shadow:
-    0 0 16px rgba(34,214,138,.9),
-    0 0 32px rgba(34,214,138,.5);
+  width: 110px;
+  height: 110px;
+
+  border-radius: 999px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(34,214,138,.26),
+      rgba(34,214,138,.08)
+    );
+
+  border:
+    2px solid rgba(34,214,138,.35);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-  /* Transición suave de rotación */
-  transition: transform .2s ease;
-  will-change: transform;
+  font-size: 58px;
 
-  /* Siempre visible */
+  color: var(--green);
+
+  text-shadow:
+    0 0 20px rgba(34,214,138,1),
+    0 0 45px rgba(34,214,138,.55);
+
+  box-shadow:
+    0 0 35px rgba(34,214,138,.18);
+
   z-index: 50;
+
+  transition:
+    transform .08s linear;
+
   pointer-events: none;
 }
 
@@ -2636,4 +2668,8 @@ textarea.input { resize: vertical; min-height: 60px; }
 .ar-poi-wrap.multi {
   opacity: .5;
   transform: scale(.9);
+}
+.ar-poi-line,
+.ar-poi-dot {
+  display: none !important;
 }
